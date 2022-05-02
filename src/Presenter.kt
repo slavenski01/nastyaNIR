@@ -1,37 +1,105 @@
-import com.example.anastasia.consants.Constants.MAX_W_FOR_T
-import com.example.anastasia.consants.Constants.PI
-import com.example.anastasia.consants.Constants.aa1
-import com.example.anastasia.consants.Constants.aa2
-import com.example.anastasia.consants.Constants.al
-import com.example.anastasia.consants.Constants.bet
-import com.example.anastasia.consants.Constants.gam
-import com.example.anastasia.consants.Constants.ht
-import com.example.anastasia.consants.Constants.hz
-import com.example.anastasia.consants.Constants.iRange
-import com.example.anastasia.consants.Constants.j
-import com.example.anastasia.consants.Constants.kRange
-import com.example.anastasia.consants.Constants.kk
-import com.example.anastasia.consants.Constants.kz
-import com.example.anastasia.consants.Constants.ll
-import com.example.anastasia.consants.Constants.lll
-import com.example.anastasia.consants.Constants.mm
-import com.example.anastasia.consants.Constants.u
-import com.example.anastasia.consants.Constants.vx
-import com.example.anastasia.consants.Constants.vy
-import com.example.anastasia.consants.Constants.z0
+import Constants.MAX_W_FOR_T
+import Constants.PI
+import Constants.aa1
+import Constants.aa2
+import Constants.al
+import Constants.bet
+import Constants.gam
+import Constants.ht
+import Constants.hz
+import Constants.iRange
+import Constants.j
+import Constants.kRange
+import Constants.kk
+import Constants.kz
+import Constants.ll
+import Constants.lll
+import Constants.mm
+import Constants.u
+import Constants.vx
+import Constants.vy
+import Constants.z0
+import extension.addZeroInFirstIndex
+import extension.getIntegral
+import extension.normalisation
 import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.math.sin
 
-class Presenter() {
+class Presenter private constructor() : CalcFacade {
     private val b = mutableListOf<Double>()
     private val A = mutableListOf<MutableList<Double>>()
     private val h = mutableListOf<Double>()
     private val f = mutableListOf<Double>()
+    private val ks = mutableListOf<Double>()
+    private val qqx1 = mutableListOf<MutableList<Double>>()
+    private val qqx2 = mutableListOf<MutableList<Double>>()
+    private val qqy1 = mutableListOf<MutableList<Double>>()
+    private val qqy2 = mutableListOf<MutableList<Double>>()
+    private val qqx = mutableListOf<MutableList<Double>>()
+    private val qqy = mutableListOf<MutableList<Double>>()
+    private val eeex = mutableListOf<MutableList<Double>>()
+    private val eeey = mutableListOf<MutableList<Double>>()
+
+    companion object {
+        private var uniqueInstance: Presenter = Presenter()
+
+        fun getInstance(): Presenter {
+            return uniqueInstance
+        }
+    }
+
+    override fun getEeex(): List<MutableList<Double>> = eeex
+
+    override fun getEeey(): List<MutableList<Double>> = eeey
+
+    override fun calcAll() {
+        calcB()
+        calcA()
+        calcH()
+        calcF()
+        calcKS()
+        calcQQX1()
+        calcQQX2()
+        calcQQY1()
+        calcQQY2()
+        calcQQX()
+        calcEEEX()
+        calcEEEY(false)
+    }
+
+    override fun calcWonT(): List<Double> {
+        var t = 0
+        val w = mutableListOf<Double>()
+        while (t < MAX_W_FOR_T) {
+            var tempSum = 0.0
+            for (k in 0..lll) {
+                for (i in 0..kz) {
+                    tempSum += t * (ht) * (hz) * (eeex[k][i] + eeey[k][i])
+                }
+            }
+            w.add(tempSum)
+            t++
+        }
+        return w
+    }
+
+    init {
+        initAllStartVariable()
+    }
+
+    private fun initAllStartVariable() {
+        b.add(0.0)
+        h.add(0.0)
+        f.add(0.0)
+        f.add(1.0)
+        A.addZeroInFirstIndex(0..mm, 0..kk)
+        eeex.addZeroInFirstIndex(0..lll, iRange)
+        eeey.addZeroInFirstIndex(0..lll, iRange)
+    }
 
     private fun calcB() {
-        b.add(0.0)
         for (i in 1..mm) {
             b.add(cos(PI * (i / mm)))
         }
@@ -43,30 +111,12 @@ class Presenter() {
         return sin(x) * (b[i] / ee(x, i))
     }
 
-    private fun integralAFun(i: Int, k: Int): Double {
-        val stepCount = 1000
-        val step = (2 * PI) / (1.0 * stepCount)
-        var sum = 0.0
-        for (j in 0..stepCount) {
-            val temp = -PI + j * step
-            sum += vv(temp, i) * sin(k * temp)
-        }
-        sum += (vv(-PI, i) * sin(k * (-PI)) + vv(PI, i) * sin(k * (PI))) / 2
-        sum *= step
-        return sum
-    }
-
     private fun calcA() {
-        for (i in 0..mm) {
-            val listNull = mutableListOf<Double>()
-            for (k in 0..kk) {
-                listNull.add(0.0)
-            }
-            A.add(listNull)
-        }
         for (i in 1..mm) {
             for (k in 1..kk) {
-                A[i][k] = integralAFun(i, k) / (2 * PI)
+                A[i][k] = getIntegral(downBound = -PI, upperBound = PI) { x ->
+                    vv(x, i) * sin(k * (x))
+                }
             }
         }
     }
@@ -81,42 +131,28 @@ class Presenter() {
         return sum
     }
 
-    private fun integralHFun(k: Int): Double {
-        val stepCount = 1000
-        val step = (2 * PI) / (1.0 * stepCount)
-        var sum = 0.0
-        for (j in 0..stepCount) {
-            val temp = -PI + j * step
-            sum += hh(temp, k) * cos(k * temp)
-        }
-        sum += (hh(-PI, k) * cos(k * (-PI)) + hh(PI, k) * cos(k * (PI))) / 2
-        sum *= step
-        return sum
-    }
-
     private fun calcH() {
-        h.add(0.0)
         for (k in 1..kk) {
-            h.add(integralHFun(k))
+            h.add(
+                getIntegral(downBound = -PI, upperBound = PI) { x ->
+                    hh(x, k) * cos(k * x)
+                }
+            )
         }
     }
 
     private fun calcF() {
-        f.add(0.0)
-        f.add(1.0)
         for (k in 2..kk) {
             f.add(h[k] / h[1])
         }
     }
 
-    private val ks = mutableListOf<Double>()
     private fun calcKS() {
         for (i in iRange) {
             ks.add(z0 + i * hz)
         }
     }
 
-    private val qqx1 = mutableListOf<MutableList<Double>>()
     private fun calcQQX1() {
         val nullList = mutableListOf<Double>()
         for (i in iRange) {
@@ -133,7 +169,6 @@ class Presenter() {
         }
     }
 
-    private val qqx2 = mutableListOf<MutableList<Double>>()
     private fun calcQQX2() {
         val nullList = mutableListOf<Double>()
         for (i in iRange) {
@@ -150,7 +185,6 @@ class Presenter() {
         }
     }
 
-    private val qqy1 = mutableListOf<MutableList<Double>>()
     private fun calcQQY1() {
         val nullList = mutableListOf<Double>()
         for (i in iRange) {
@@ -167,7 +201,6 @@ class Presenter() {
         }
     }
 
-    private val qqy2 = mutableListOf<MutableList<Double>>()
     private fun calcQQY2() {
         val nullList = mutableListOf<Double>()
         for (i in iRange) {
@@ -184,8 +217,6 @@ class Presenter() {
         }
     }
 
-    private val qqx = mutableListOf<MutableList<Double>>()
-    private val qqy = mutableListOf<MutableList<Double>>()
     private fun calcQQX() {
         for (k in 0..lll) {
             val nullList = mutableListOf<Double>()
@@ -204,7 +235,7 @@ class Presenter() {
         }
 
         var nn = 1
-        while (nn < 4500) {
+        while (nn < 1000) {
             for (k in kRange) {
                 qqx[k][0] = (4 * qqx2[k][1] - qqx2[k][2]) / 3
                 qqx[k][kz] = (4 * qqx2[k][kz - 1] - qqx2[k][kz - 2]) / 3
@@ -278,15 +309,7 @@ class Presenter() {
         }
     }
 
-    private val eeex = mutableListOf<MutableList<Double>>()
     private fun calcEEEX() {
-        for (k in 0..lll) {
-            val nullList = mutableListOf<Double>()
-            for (i in iRange) {
-                nullList.add(0.0)
-            }
-            eeex.add(nullList)
-        }
         for (k in 1..lll) {
             for (i in 2..kz - 2) {
                 eeex[k][i] = (-qqx[k][i + 1] + qqx[k][i]) / ht
@@ -294,63 +317,14 @@ class Presenter() {
         }
     }
 
-    private val eeey = mutableListOf<MutableList<Double>>()
     private fun calcEEEY(withNormalization: Boolean) {
-        for (k in 0..lll) {
-            val nullList = mutableListOf<Double>()
-            for (i in iRange) {
-                nullList.add(0.0)
-            }
-            eeey.add(nullList)
-        }
         for (k in 1..lll) {
             for (i in 2..kz - 2) {
                 eeey[k][i] = ((-qqy[k][i + 1] + qqy[k][i]) / ht).pow(2)
             }
         }
         if (withNormalization) {
-            var maxEEEY = 0.0
-            eeey.forEach { list ->
-                if (list.maxOf { it } > maxEEEY) maxEEEY = list.maxOf { it }
-            }
-            for (k in 0..lll) {
-                for (i in 0..kz) {
-                    eeey[k][i] = eeey[k][i] / maxEEEY
-                }
-            }
+            eeey.normalisation()
         }
-    }
-
-    fun printResults(): List<MutableList<Double>> {
-        calcB()
-        calcA()
-        calcH()
-        calcF()
-        calcKS()
-        calcQQX1()
-        calcQQX2()
-        calcQQY1()
-        calcQQY2()
-        calcQQX()
-        calcEEEX()
-        calcEEEY(false)
-        return eeex
-    }
-
-    fun calcWOnT(): List<Double> {
-        var t = 0
-        val w = mutableListOf<Double>()
-        while (t < MAX_W_FOR_T) {
-            var tempSum = 0.0
-            for(k in 0..lll) {
-                for(i in 0..kz) {
-                    tempSum += t * (ht) * (hz) * (eeex[k][i] + eeey[k][i])
-                }
-            }
-            w.add(tempSum)
-            t++
-        }
-        return w
     }
 }
-

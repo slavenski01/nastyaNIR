@@ -3,11 +3,15 @@ import java.io.File
 fun main() {
     print("Hello")
 
-    val presenter = Presenter()
-    val eeex = presenter.printResults()
-    val wOntList = presenter.calcWOnT()
+    val presenter = Presenter.getInstance()
+    presenter.calcAll()
+    val eeex = presenter.getEeex()
+    val eeey = presenter.getEeey()
+    val wOntList = presenter.calcWonT()
+
+
     File("chickenBurger.txt").printWriter().use { out ->
-        wOntList.forEach {
+        eeex.forEach {
             out.println("$it\t")
         }
     }

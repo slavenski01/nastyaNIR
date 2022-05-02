@@ -1,5 +1,3 @@
-package com.example.anastasia.consants
-
 import kotlin.math.pow
 
 object Constants {
