@@ -1,58 +1,64 @@
-import Constants.MAX_W_FOR_T
-import Constants.PI
-import Constants.aa1
-import Constants.aa2
-import Constants.al
-import Constants.bet
-import Constants.gam
-import Constants.ht
-import Constants.hz
-import Constants.iRange
-import Constants.j
-import Constants.kRange
-import Constants.kk
-import Constants.kz
-import Constants.ll
-import Constants.lll
-import Constants.mm
-import Constants.u
-import Constants.vx
-import Constants.vy
-import Constants.z0
+package model
+
+import utils.Constants.PI
+import utils.Constants.aa1
+import utils.Constants.aa2
+import utils.Constants.al
+import utils.Constants.bet
+import utils.Constants.gam
+import utils.Constants.ht
+import utils.Constants.hz
+import utils.Constants.iRange
+import utils.Constants.j
+import utils.Constants.kRange
+import utils.Constants.kk
+import utils.Constants.kz
+import utils.Constants.ll
+import utils.Constants.lll
+import utils.Constants.mm
+import utils.Constants.u
+import utils.Constants.vx
+import utils.Constants.vy
+import utils.Constants.z0
 import extension.addZeroInFirstIndex
 import extension.getIntegral
+import extension.initZero
 import extension.normalisation
 import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.math.sin
 
-class Presenter private constructor() : CalcFacade {
-    private val b = mutableListOf<Double>()
-    private val A = mutableListOf<MutableList<Double>>()
-    private val h = mutableListOf<Double>()
-    private val f = mutableListOf<Double>()
-    private val ks = mutableListOf<Double>()
-    private val qqx1 = mutableListOf<MutableList<Double>>()
-    private val qqx2 = mutableListOf<MutableList<Double>>()
-    private val qqy1 = mutableListOf<MutableList<Double>>()
-    private val qqy2 = mutableListOf<MutableList<Double>>()
-    private val qqx = mutableListOf<MutableList<Double>>()
-    private val qqy = mutableListOf<MutableList<Double>>()
-    private val eeex = mutableListOf<MutableList<Double>>()
-    private val eeey = mutableListOf<MutableList<Double>>()
+class InteractorCalc() : Interactor {
+    override val b: MutableList<Double> = mutableListOf()
+    override val A: MutableList<MutableList<Double>> = mutableListOf()
+    override val h: MutableList<Double> = mutableListOf()
+    override val f: MutableList<Double> = mutableListOf()
+    override val ks: MutableList<Double> = mutableListOf()
+    override val qqx1: MutableList<MutableList<Double>> = mutableListOf()
+    override val qqx2: MutableList<MutableList<Double>> = mutableListOf()
+    override val qqy1: MutableList<MutableList<Double>> = mutableListOf()
+    override val qqy2: MutableList<MutableList<Double>> = mutableListOf()
+    override val qqx: MutableList<MutableList<Double>> = mutableListOf()
+    override val qqy: MutableList<MutableList<Double>> = mutableListOf()
+    override val eeex: MutableList<MutableList<Double>> = mutableListOf()
+    override val eeey: MutableList<MutableList<Double>> = mutableListOf()
 
-    companion object {
-        private var uniqueInstance: Presenter = Presenter()
-
-        fun getInstance(): Presenter {
-            return uniqueInstance
-        }
+    override fun initAllStartVariable() {
+        b.initZero(0..mm)
+        h.initZero(0..kk)
+        f.initZero(0..kk)
+        ks.initZero(iRange)
+        A.addZeroInFirstIndex(0..mm, 0..kk)
+        qqx1.addZeroInFirstIndex(0..lll, iRange)
+        qqx2.addZeroInFirstIndex(0..lll, iRange)
+        qqy1.addZeroInFirstIndex(0..lll, iRange)
+        qqy2.addZeroInFirstIndex(0..lll, iRange)
+        qqx.addZeroInFirstIndex(0..lll, iRange)
+        qqy.addZeroInFirstIndex(0..lll, iRange)
+        eeex.addZeroInFirstIndex(0..lll, iRange)
+        eeey.addZeroInFirstIndex(0..lll, iRange)
     }
-
-    override fun getEeex(): List<MutableList<Double>> = eeex
-
-    override fun getEeey(): List<MutableList<Double>> = eeey
 
     override fun calcAll() {
         calcB()
@@ -69,49 +75,17 @@ class Presenter private constructor() : CalcFacade {
         calcEEEY(false)
     }
 
-    override fun calcWonT(): List<Double> {
-        var t = 0
-        val w = mutableListOf<Double>()
-        while (t < MAX_W_FOR_T) {
-            var tempSum = 0.0
-            for (k in 0..lll) {
-                for (i in 0..kz) {
-                    tempSum += t * (ht) * (hz) * (eeex[k][i] + eeey[k][i])
-                }
-            }
-            w.add(tempSum)
-            t++
-        }
-        return w
-    }
-
-    init {
-        initAllStartVariable()
-    }
-
-    private fun initAllStartVariable() {
-        b.add(0.0)
-        h.add(0.0)
-        f.add(0.0)
-        f.add(1.0)
-        A.addZeroInFirstIndex(0..mm, 0..kk)
-        eeex.addZeroInFirstIndex(0..lll, iRange)
-        eeey.addZeroInFirstIndex(0..lll, iRange)
-    }
-
-    private fun calcB() {
+    override fun calcB() {
         for (i in 1..mm) {
-            b.add(cos(PI * (i / mm)))
+            b[i] = (cos(PI * (i / mm)))
         }
     }
 
-    private fun ee(x: Double, i: Int) = (1 + 4 * cos(x) * b[i] + 4 * b[i] * b[i]).pow(0.5)
+    override fun ee(x: Double, i: Int) = (1 + 4 * cos(x) * b[i] + 4 * b[i] * b[i]).pow(0.5)
 
-    private fun vv(x: Double, i: Int): Double {
-        return sin(x) * (b[i] / ee(x, i))
-    }
+    override fun vv(x: Double, i: Int) = sin(x) * (b[i] / ee(x, i))
 
-    private fun calcA() {
+    override fun calcA() {
         for (i in 1..mm) {
             for (k in 1..kk) {
                 A[i][k] = getIntegral(downBound = -PI, upperBound = PI) { x ->
@@ -121,9 +95,9 @@ class Presenter private constructor() : CalcFacade {
         }
     }
 
-    private fun tt(x: Double, i: Int) = 1 / (1 + exp(j * ee(x, i)))
+    override fun tt(x: Double, i: Int) = 1 / (1 + exp(j * ee(x, i)))
 
-    private fun hh(x: Double, k: Int): Double {
+    override fun hh(x: Double, k: Int): Double {
         var sum = 0.0
         for (i in 1..mm) {
             sum += A[i][k] * tt(x, i)
@@ -131,111 +105,70 @@ class Presenter private constructor() : CalcFacade {
         return sum
     }
 
-    private fun calcH() {
+    override fun calcH() {
         for (k in 1..kk) {
-            h.add(
-                getIntegral(downBound = -PI, upperBound = PI) { x ->
-                    hh(x, k) * cos(k * x)
-                }
-            )
+            h[k] = (getIntegral(downBound = -PI, upperBound = PI) { x ->
+                hh(x, k) * cos(k * x)
+            })
         }
     }
 
-    private fun calcF() {
+    override fun calcF() {
         for (k in 2..kk) {
-            f.add(h[k] / h[1])
+            f[k] = (h[k] / h[1])
         }
     }
 
-    private fun calcKS() {
+    override fun calcKS() {
         for (i in iRange) {
-            ks.add(z0 + i * hz)
+            ks[i] = (z0 + i * hz)
         }
     }
 
-    private fun calcQQX1() {
-        val nullList = mutableListOf<Double>()
-        for (i in iRange) {
-            nullList.add(0.0)
-        }
-        qqx1.add(nullList)
-
+    override fun calcQQX1() {
         for (k in kRange) {
             val tempList = mutableListOf<Double>()
             for (i in iRange) {
                 tempList.add(4 * exp(-((ks[i] / gam).pow(2))) * exp(-bet * (k - ll) * (k - ll)))
             }
-            qqx1.add(tempList)
+            qqx1[k] = (tempList)
         }
     }
 
-    private fun calcQQX2() {
-        val nullList = mutableListOf<Double>()
-        for (i in iRange) {
-            nullList.add(0.0)
-        }
-        qqx2.add(nullList)
-
+    override fun calcQQX2() {
         for (k in kRange) {
             val tempList = mutableListOf<Double>()
             for (i in iRange) {
                 tempList.add(4 * exp(-((ks[i] - u * ht) / gam).pow(2)) * exp(-bet * (k - ll) * (k - ll)))
             }
-            qqx2.add(tempList)
+            qqx2[k] = (tempList)
         }
     }
 
-    private fun calcQQY1() {
-        val nullList = mutableListOf<Double>()
-        for (i in iRange) {
-            nullList.add(0.0)
-        }
-        qqy1.add(nullList)
-
+    override fun calcQQY1() {
         for (k in kRange) {
             val tempList = mutableListOf<Double>()
             for (i in iRange) {
                 tempList.add(0.0)
             }
-            qqy1.add(tempList)
+            qqy1[k] = (tempList)
         }
     }
 
-    private fun calcQQY2() {
-        val nullList = mutableListOf<Double>()
-        for (i in iRange) {
-            nullList.add(0.0)
-        }
-        qqy2.add(nullList)
-
+    override fun calcQQY2() {
         for (k in kRange) {
             val tempList = mutableListOf<Double>()
             for (i in iRange) {
                 tempList.add(0.0)
             }
-            qqy2.add(tempList)
+            qqy2[k] = (tempList)
         }
     }
 
-    private fun calcQQX() {
-        for (k in 0..lll) {
-            val nullList = mutableListOf<Double>()
-            for (i in iRange) {
-                nullList.add(0.0)
-            }
-            qqx.add(nullList)
-        }
-
-        for (k in 0..lll) {
-            val nullList = mutableListOf<Double>()
-            for (i in iRange) {
-                nullList.add(0.0)
-            }
-            qqy.add(nullList)
-        }
-
+    override fun calcQQX() {
         var nn = 1
-        while (nn < 1000) {
+        print("[")
+        while (nn < 200) {
             for (k in kRange) {
                 qqx[k][0] = (4 * qqx2[k][1] - qqx2[k][2]) / 3
                 qqx[k][kz] = (4 * qqx2[k][kz - 1] - qqx2[k][kz - 2]) / 3
@@ -295,7 +228,6 @@ class Presenter private constructor() : CalcFacade {
                             aa2 * sin(al) * (sin(qqx2[k][i] * cos(al) + qqy2[k][i] * sin(al)) + sum1)
                 }
             }
-
             for (k in 1..lll) {
                 for (i in 0..kz) {
                     qqx1[k][i] = qqx2[k][i]
@@ -304,12 +236,13 @@ class Presenter private constructor() : CalcFacade {
                     qqy2[k][i] = qqy[k][i]
                 }
             }
-            println("$nn")
+            print("$nn, ")
             nn++
         }
+        print("]")
     }
 
-    private fun calcEEEX() {
+    override fun calcEEEX() {
         for (k in 1..lll) {
             for (i in 2..kz - 2) {
                 eeex[k][i] = (-qqx[k][i + 1] + qqx[k][i]) / ht
@@ -317,7 +250,7 @@ class Presenter private constructor() : CalcFacade {
         }
     }
 
-    private fun calcEEEY(withNormalization: Boolean) {
+    override fun calcEEEY(withNormalization: Boolean) {
         for (k in 1..lll) {
             for (i in 2..kz - 2) {
                 eeey[k][i] = ((-qqy[k][i + 1] + qqy[k][i]) / ht).pow(2)
@@ -326,5 +259,23 @@ class Presenter private constructor() : CalcFacade {
         if (withNormalization) {
             eeey.normalisation()
         }
+    }
+
+    override fun calcWT(): List<Double> {
+        val W = mutableListOf<Double>()
+        var nn = 1
+        while (nn < 10) {
+            var sum = 0.0
+            calcAll()
+            for (k in 0..lll) {
+                for (i in 0..kz) {
+                    sum += ht * hz * (eeex[k][i] + eeey[k][i])
+                }
+            }
+            W.add(sum)
+            println("iteration nn: $nn")
+            nn++
+        }
+        return W
     }
 }

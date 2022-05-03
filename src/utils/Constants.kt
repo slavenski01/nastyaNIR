@@ -1,3 +1,5 @@
+package utils
+
 import kotlin.math.pow
 
 object Constants {
@@ -16,7 +18,6 @@ object Constants {
     const val al = 0.9
     const val vx = 1
     const val vy = 0.5
-    const val MAX_W_FOR_T = 500
     val gam = (1 - u * u).pow(0.5)
     val iRange = 0..kz
     val kRange = 1..lll

@@ -1,3 +1,5 @@
+package presenter
+
 interface CalcFacade {
     fun getEeex(): List<MutableList<Double>>
     fun getEeey(): List<MutableList<Double>>

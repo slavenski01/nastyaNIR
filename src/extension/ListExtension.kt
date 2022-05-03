@@ -1,6 +1,12 @@
 package extension
 
-import Constants
+import utils.Constants
+
+fun MutableList<Double>.initZero(range: IntRange) {
+    for(i in range) {
+        this.add(0.0)
+    }
+}
 
 fun MutableList<MutableList<Double>>.addZeroInFirstIndex(rangeMain: IntRange, rangeSub: IntRange) {
     for (i in rangeMain) {
